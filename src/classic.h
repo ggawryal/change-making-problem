@@ -11,7 +11,7 @@ namespace classic {
         //dp[x] means minimum number of coins needed to change x or -1, if impossible
         std::vector<Num> dp(t+1,t+1);
         dp[0] = 0;
-        for(int i=0;i<t;i++) {
+        for(int i=0;i<=t;i++) {
             if(dp[i] > t) {
                 dp[i] = -1;
                 continue;
