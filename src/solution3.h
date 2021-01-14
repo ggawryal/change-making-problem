@@ -5,9 +5,10 @@
 
 //solution 3 from On the Change-Making Problem paper by Timothy M. Chan, Qizheng He
 //O(n + t log^2t), decision version in O(n + t log t)
+//coins should be in sorted order
 namespace solution3 {
     template<class Num=int>
-    std::vector<Num> computeCmt(std::vector<Num> w1, int m, int t) {
+    std::vector<Num> computeCmt(std::vector<int> w1, int m, int t) {
         if(m == 0) {
             for(int i=0;i<(int)w1.size();i++)
                 w1[i] = (i == 0 ? 1 : 0);
@@ -31,21 +32,29 @@ namespace solution3 {
     }
 
     template<class Num=int>
-    bool canChangeUsingAtMost(Num m, std::vector<Num> coins, Num t) {
+    std::vector<int> getAllChangesUsingAtMost(Num m, const std::vector<Num>& coins, Num t) {
         int p2 = 1;
         while(p2 <= 2*t)
             p2 <<=1;
 
-        std::vector<Num> w(p2);
+        std::vector<int> w(p2);
         w[0] = 1;
-        for(auto &c : coins)
+        for(auto &c : coins) {
+            if(c > t)
+                break;
             w[c] = 1;
-        
-        return computeCmt(w,m,p2)[t];
+        }
+       
+        return computeCmt(w,m,p2);
     }
 
     template<class Num=int>
-    Num getMinimumCoinNumberFor(std::vector<Num> coins, Num t) {
+    bool canChangeUsingAtMost(Num m, const std::vector<Num>& coins, Num t) {
+        return getAllChangesUsingAtMost(m,coins,t)[t];
+    }
+
+    template<class Num=int>
+    Num getMinimumCoinNumberFor(const std::vector<Num>& coins, Num t) {
         Num l=0, r=t, m, res=-1;
         while(l <= r) {
             m = (l+r)/2;

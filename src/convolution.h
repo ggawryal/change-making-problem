@@ -30,7 +30,7 @@ std::vector<std::complex<double> > toComplexVector(std::vector<int> A) {
 }
 
 //A and B should be of lenght 2^k, where 2^k > 2*t
-std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B) {
+std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B, bool removeCoinsAfterHalf = true) {
     auto Ac = toComplexVector(A), Bc = toComplexVector(B);
     FFT(Ac);
     FFT(Bc);
@@ -38,7 +38,27 @@ std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B) {
         Ac[i] *= Bc[i];
     FFT(Ac,-1);
     for(int i=0;i<(int)A.size();i++)
-        A[i] = (i < (int)A.size()/2 && Ac[i].real() >= A.size()/2 ? 1 : 0);
+        A[i] = (Ac[i].real() >= A.size()/2 ? 1 : 0);
+
+    if(removeCoinsAfterHalf) {
+        for(int i=A.size()/2;i<(int)A.size();i++)
+            A[i] = 0;
+    }
+    return A;
+}
+
+
+std::vector<int> unallignedCombineCoinSets(std::vector<int> A, std::vector<int> B, int maxIndex) {
+    if(A.size() < B.size())
+        swap(A,B);
+    int p = 1;
+    while(2*p <= A.size())
+        p <<=1;
+    
+    A.resize(p);
+    B.resize(p);
+    A = combineCoinSets(A,B,false);
+    A.resize(maxIndex+1);
     return A;
 }
 
