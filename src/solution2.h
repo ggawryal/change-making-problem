@@ -17,9 +17,13 @@ namespace solution2 {
         for(auto &c : coins)
             w[0][c] = 1;
 
-        while(w.back()[t] == 0)
+
+        while((1<<(Num)w.size()) < p2 && w.back()[t] == 0)
             w.push_back(combineCoinSets(w.back(),w.back()));
-        
+
+        if(w.back()[t] == 0)
+            return -1;
+
         std::vector<Num> currentCoinSet(p2);
         currentCoinSet[0] = 1;
         int m = 0;
