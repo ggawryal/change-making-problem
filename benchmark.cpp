@@ -5,6 +5,7 @@
 #include <cassert>
 #include "src/classic.h"
 #include "src/solution1.h"
+#include "src/solution2.h"
 using namespace std;
 
 const int RNG_SEED = 5343634;
@@ -28,6 +29,7 @@ int main() {
         auto coins = randomTest(5,1,t/4);
         int x1 = classic::getAllChangesUpTo(coins,t)[t];
         int x2 = solution1::getMinimumCoinNumberFor(coins,t);
-        assert(x1 == x2);
+        int x3 = solution2::getMinimumCoinNumberFor(coins,t);
+        assert(x1 == x2 && x2 == x3);
     }
 }
