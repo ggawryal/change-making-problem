@@ -10,6 +10,7 @@
 #include "src/solution2.h"
 #include "src/solution3.h"
 #include "src/solution4.h"
+#include "src/solution_for_small_u.h"
 using namespace std;
 
 const int RNG_SEED = 5343634;
@@ -44,6 +45,7 @@ void testOnEdgeCases(function<int(vector<int>,int)> f) {
 }
 
 int main() {
+    testOnEdgeCases(smallU::getMinimumCoinNumberFor<int>);
     testOnEdgeCases(solution1::getMinimumCoinNumberFor<int>);
     testOnEdgeCases(solution2::getMinimumCoinNumberFor<int>);
     testOnEdgeCases(solution3::getMinimumCoinNumberFor<int>);
@@ -53,7 +55,7 @@ int main() {
         int t = randInt(10,50);
         int c = randInt(1,t/randInt(2,10));
         auto coins = randomTest(c,1,randInt(c,t));
-        int x0 = classic::getAllChangesUpTo(coins,t)[t];
+        int x0 = smallU::getAllChangesUpTo(coins,t)[t];
         
         int x1 = solution1::getMinimumCoinNumberFor(coins,t);
         int x2 = solution2::getMinimumCoinNumberFor(coins,t);
