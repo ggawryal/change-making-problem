@@ -2,8 +2,70 @@
 #define COIN_CHANGE_CONVOLUTION
 #include <vector>
 #include <complex>
+#include <fftw3.h>
+const double PI = acos(-1);
 
-void FFT(std::vector<std::complex<double> >& A, int t=1) {
+void FFTW(std::vector<std::complex<double> >&A, int t=1) {
+    const int n = A.size();
+    fftw_complex *in, *out;
+    fftw_plan p;
+
+
+    in  = fftw_alloc_complex(n);
+    out = fftw_alloc_complex(n);
+
+    for(int i=0;i<n;i++) {
+        in[i][0] = A[i].real();
+        in[i][1] = A[i].imag();
+    }
+
+    p = fftw_plan_dft_1d(n, in, out, t, FFTW_ESTIMATE);
+    fftw_execute(p);
+    
+    for(int i=0;i<n;i++) 
+        A[i] = {out[i][0], out[i][1]}; 
+    
+    
+    fftw_destroy_plan(p);
+    fftw_free(in); fftw_free(out);
+}
+
+void iterativeFFT(std::vector<std::complex<double> >&A, int t=1) {
+    typedef std::complex<double> C;
+
+    const int n = A.size();
+
+    std::vector<C> e(n);
+    for(int i=0;i<n;i++)
+        e[i] = exp(C(0,t*2*PI*i/n));
+
+    for(int i=0;i<n;i++) {
+        int j=0; 
+        for(int k=1; k<n; k<<=1, j<<=1)
+            if(k&i) j++;
+        j>>=1; 
+        if(i<j) 
+            std::swap(A[i], A[j]);
+    }
+
+    int k = 0;
+    while((1<<k)<n) 
+        k++;
+    
+    for(int m=2;m<=n;m<<=1) {
+        k--;
+        for(int i=0; i<n; i+=m) {
+            for(int j=0; j<m/2; j++) {
+                C u = A[i+j];
+                C v = e[j<<k]*A[i+j+m/2];
+                A[i+j] = u+v;
+                A[i+j+m/2] = u-v;
+            }
+        }
+    }
+}
+
+void recursiveFFT(std::vector<std::complex<double> >& A, int t=1) {
     typedef std::complex<double> C;
     int n = A.size();
     if(n == 1)
@@ -14,9 +76,9 @@ void FFT(std::vector<std::complex<double> >& A, int t=1) {
         P[i/2] = A[i];
         N[i/2] = A[i+1];
     }
-    FFT(P,t);
-    FFT(N,t);
-    const double PI = acos(-1);
+    recursiveFFT(P,t);
+    recursiveFFT(N,t);
+
     C e = exp(C(0,t*2*PI/n)), cur = 1;
     for(int i=0;i<n/2;i++) {
         A[i] = P[i] + cur*N[i];
@@ -24,6 +86,8 @@ void FFT(std::vector<std::complex<double> >& A, int t=1) {
         cur *= e;
     }
 }
+
+void FFT(std::vector<std::complex<double> >&A, int t=1) {return FFTW(A,t);}
 
 std::vector<std::complex<double> > toComplexVector(std::vector<int> A) {
     return std::vector<std::complex<double> >(A.begin(),A.end());

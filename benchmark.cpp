@@ -44,7 +44,7 @@ void testOnEdgeCases(function<int(vector<int>,int)> f) {
     assert(f({10, 116, 469, 474, 613},1050) == 48);
 }
 
-int main() {
+void testCorectness() {
     testOnEdgeCases(smallU::getMinimumCoinNumberFor<int>);
     testOnEdgeCases(solution1::getMinimumCoinNumberFor<int>);
     testOnEdgeCases(solution2::getMinimumCoinNumberFor<int>);
@@ -64,4 +64,17 @@ int main() {
     
         assert(x0 == x1 && x1 == x2 && x2 == x3 && x3 == x4);
     }
+}
+
+int main() {
+    //testCorectness();
+    ios::sync_with_stdio(false);
+    int n,t;
+    cin >> n >> t;
+    vector<int> coins(n);
+    for(int i=0;i<n;i++)
+        cin >> coins[i];
+    cout<<solution4::getMinimumCoinNumberFor<int>(coins,t)<<endl;
+    return 0;
+   
 }
