@@ -19,7 +19,7 @@ namespace solution2 {
 
 
         while((1<<(Num)w.size()) < p2 && w.back()[t] == 0)
-            w.push_back(combineCoinSets(w.back(),w.back()));
+            w.push_back(combineCoinSetsWhereAEqualsB(w.back()));
 
         if(w.back()[t] == 0)
             return -1;

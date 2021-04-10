@@ -3,7 +3,6 @@
 #include <vector>
 #include "convolution.h"
 #include "solution3.h"
-using namespace std;
 
 //solution 4 from On the Change-Making Problem paper by Timothy M. Chan, Qizheng He
 //O(n + t log(t) loglog(t))
@@ -46,7 +45,7 @@ namespace solution4 {
                 C = C2;
             }
             auto Cr = solution3::getAllChangesUsingAtMost(1<<i, coins, (t>>(l-i)));
-            auto Cw = unallignedCombineCoinSets(C,Cr,t-indexShift);
+            auto Cw = unallignedCombineCoinSets(C,Cr,t-indexShift+1);
             if(Cw[t-indexShift] == 0) {
                 C = Cw;
                 res += (1<<i);

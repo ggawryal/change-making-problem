@@ -93,11 +93,15 @@ std::vector<std::complex<double> > toComplexVector(std::vector<int> A) {
     return std::vector<std::complex<double> >(A.begin(),A.end());
 }
 
-//A and B should be of lenght 2^k, where 2^k > 2*t
-std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B, bool removeCoinsAfterHalf = true) {
-    auto Ac = toComplexVector(A), Bc = toComplexVector(B);
+std::vector<std::complex<double> > toComplexAndFFT(std::vector<int> A) {
+    auto Ac = toComplexVector(A);
     FFT(Ac);
-    FFT(Bc);
+    return Ac;
+}
+
+//Ac = FFT(A), Bc = FFT(B)
+std::vector<int> combineCoinSetsPart2(std::vector<std::complex<double> > Ac, std::vector<std::complex<double> > Bc, bool removeCoinsAfterHalf) {
+    std::vector<int> A(Ac.size());
     for(int i=0;i<(int)A.size();i++)
         Ac[i] *= Bc[i];
     FFT(Ac,-1);
@@ -111,18 +115,39 @@ std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B, bool re
     return A;
 }
 
+//A and B should be of lenght 2^k, where 2^k > 2*t
+std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B, bool removeCoinsAfterHalf = true) {
+    auto Ac = toComplexAndFFT(A), Bc = toComplexAndFFT(B);
+    return combineCoinSetsPart2(Ac,Bc,removeCoinsAfterHalf);
+}
+
+std::vector<int> combineCoinSets(std::vector<int> A, std::vector<std::complex<double> > Bc, bool removeCoinsAfterHalf = true) {
+    auto Ac = toComplexAndFFT(A);
+    return combineCoinSetsPart2(Ac,Bc,removeCoinsAfterHalf);
+}
+
+//A and B should be of lenght 2^k, where 2^k > 2*t
+std::vector<int> combineCoinSetsWhereAEqualsB(std::vector<int> A,bool removeCoinsAfterHalf = true) {
+    auto Ac = toComplexAndFFT(A);
+    return combineCoinSetsPart2(Ac,Ac,removeCoinsAfterHalf);
+}
+
+
+
 
 std::vector<int> unallignedCombineCoinSets(std::vector<int> A, std::vector<int> B, int maxIndex) {
+    if(maxIndex == -1)
+        maxIndex = (int)A.size() + (int)B.size()-1;
     if(A.size() < B.size())
         swap(A,B);
     int p = 1;
-    while(2*p <= A.size())
+    while(p <= 2*A.size())
         p <<=1;
     
     A.resize(p);
     B.resize(p);
     A = combineCoinSets(A,B,false);
-    A.resize(maxIndex+1);
+    A.resize(maxIndex);
     return A;
 }
 

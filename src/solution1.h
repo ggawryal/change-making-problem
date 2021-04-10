@@ -20,7 +20,7 @@ namespace solution1 {
         while(m > 0) {
             if(m&1)
                 res = combineCoinSets(res,w);
-            w = combineCoinSets(w,w);
+            w = combineCoinSetsWhereAEqualsB(w);
             m>>=1;
         }
         return res[t];
