@@ -11,16 +11,16 @@ namespace smallUSingleTarget {
     //w1 has size u+1
      std::vector<Num> computeLastFewValuesOfCmt(std::vector<int> w1, int m, int t, int u) { // returns C_m^t[t - 4u, ..., t]
         if(m == 0) {
-            vector<int> res(t-max(0,t-4*u)+1,0);
+            vector<int> res(t-std::max(0,t-4*u)+1,0);
             if(t - 4*u < 1)
                 res[0] = 1;
             return res;
         }
         if(m == 1) {
-            vector<int> res(t-max(0,t-4*u)+1);
+            vector<int> res(t-std::max(0,t-4*u)+1);
            
-            for(int i = max(0,t-4*u); i<=min(u,t);i++)
-                res[i - max(0,t-4*u)] = w1[i];
+            for(int i = std::max(0,t-4*u); i <= std::min(u,t);i++)
+                res[i - std::max(0,t-4*u)] = w1[i];
             
             return res;
         }
@@ -45,7 +45,7 @@ namespace smallUSingleTarget {
         c_half = unallignedCombineCoinSets(c_half,c_half,-1); //[2t/2-8u; 2t/2+2u]
         if(t%2 == 1)
             c_half.push_back(0);
-        return vector<int>(c_half.end()-min((int)c_half.size(),6*u+1), c_half.end()-2*u);
+        return vector<int>(c_half.end() - std::min((int)c_half.size(),6*u+1), c_half.end()-2*u);
     }
 
     template<class Num=int>
@@ -55,7 +55,7 @@ namespace smallUSingleTarget {
         for(auto &c : coins)
             w[c] = 1;
        
-        return computeCmt(w,m,t,coins.back());
+        return computeLastFewValuesOfCmt(w,m,t,coins.back());
     }
 
     template<class Num=int>
@@ -67,11 +67,13 @@ namespace smallUSingleTarget {
     Num getMinimumCoinNumberFor(std::vector<Num> coins, Num t) {
         while(coins.back() > t)
             coins.pop_back();
+
         int additionalMaxCoins = 0;
-        while(t > coins.back()*(long long)coins.back()) {
-            t -= coins.back();
-            additionalMaxCoins++;
+        if(t > coins.back()*(long long)coins.back()) {
+            additionalMaxCoins = (t - coins.back()*(long long)coins.back())/coins.back();
+            t -= additionalMaxCoins*coins.back();
         }
+
         Num l=0, r=t, m, res=-1;
         while(l <= r) {
             m = (l+r)/2;
@@ -80,6 +82,8 @@ namespace smallUSingleTarget {
             else
                 l = m+1;
         }
+        if(res == -1)
+            return -1;
         return res + additionalMaxCoins;
     }
 };
