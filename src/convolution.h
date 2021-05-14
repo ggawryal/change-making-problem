@@ -3,35 +3,50 @@
 #include <vector>
 #include <complex>
 #include <fftw3.h>
-const double PI = acos(-1);
+const float PI = acos(-1);
 
-void FFTW(std::vector<std::complex<double> >&A, int t=1) {
+//select fft version
+#ifndef DONT_USE_FFTW
+void FFTW(std::vector<std::complex<float> >&A, int t=1) {
     const int n = A.size();
-    fftw_complex *in, *out;
-    fftw_plan p;
+    if(t == 1) {
+        float *in  = fftwf_alloc_real(n);
+        fftwf_complex *out = fftwf_alloc_complex(n);
+        for(int i=0;i<n;i++)
+            in[i] = A[i].real();
 
-
-    in  = fftw_alloc_complex(n);
-    out = fftw_alloc_complex(n);
-
-    for(int i=0;i<n;i++) {
-        in[i][0] = A[i].real();
-        in[i][1] = A[i].imag();
+        fftwf_plan p = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_ESTIMATE);
+        fftwf_execute(p);
+        for(int i=0;i<n;i++)
+            if(i < n-i)
+                A[i] = {out[i][0],-out[i][1]};
+            else
+                A[i] = {out[n-i][0], out[n-i][1]};
+        fftwf_destroy_plan(p);
+        fftwf_free(in); fftwf_free(out);
+        return;
     }
-
-    p = fftw_plan_dft_1d(n, in, out, t, FFTW_ESTIMATE);
-    fftw_execute(p);
-    
-    for(int i=0;i<n;i++) 
-        A[i] = {out[i][0], out[i][1]}; 
-    
-    
-    fftw_destroy_plan(p);
-    fftw_free(in); fftw_free(out);
+    else {
+        fftwf_complex *in  = fftwf_alloc_complex(n/2+1);
+        float *out = fftwf_alloc_real(n);
+        for(int i=0;i<=n/2;i++) {
+            in[i][0] = A[i].real();
+            in[i][1] = -A[i].imag();
+        }
+        fftwf_plan p = fftwf_plan_dft_c2r_1d(n, in, out, FFTW_ESTIMATE);
+        fftwf_execute(p);
+        for(int i=0;i<n;i++) 
+            A[i] = {out[i], 0}; 
+            
+        fftwf_destroy_plan(p);
+        fftwf_free(in); fftwf_free(out);
+    }
 }
+void FFT(std::vector<std::complex<float> >&A, int t=1) {return FFTW(A,t);}
 
-void iterativeFFT(std::vector<std::complex<double> >&A, int t=1) {
-    typedef std::complex<double> C;
+#else
+void iterativeFFT(std::vector<std::complex<float> >&A, int t=1) {
+    typedef std::complex<float> C;
 
     const int n = A.size();
 
@@ -64,43 +79,21 @@ void iterativeFFT(std::vector<std::complex<double> >&A, int t=1) {
         }
     }
 }
+void FFT(std::vector<std::complex<float> >&A, int t=1) {return iterativeFFT(A,t);}
+#endif
 
-void recursiveFFT(std::vector<std::complex<double> >& A, int t=1) {
-    typedef std::complex<double> C;
-    int n = A.size();
-    if(n == 1)
-        return;
-
-    std::vector<C> P(n/2),N(n/2);
-    for(int i=0;i<n;i+=2) {
-        P[i/2] = A[i];
-        N[i/2] = A[i+1];
-    }
-    recursiveFFT(P,t);
-    recursiveFFT(N,t);
-
-    C e = exp(C(0,t*2*PI/n)), cur = 1;
-    for(int i=0;i<n/2;i++) {
-        A[i] = P[i] + cur*N[i];
-        A[i+n/2] = P[i] - cur*N[i];
-        cur *= e;
-    }
+std::vector<std::complex<float> > toComplexVector(std::vector<int> A) {
+    return std::vector<std::complex<float> >(A.begin(),A.end());
 }
 
-void FFT(std::vector<std::complex<double> >&A, int t=1) {return FFTW(A,t);}
-
-std::vector<std::complex<double> > toComplexVector(std::vector<int> A) {
-    return std::vector<std::complex<double> >(A.begin(),A.end());
-}
-
-std::vector<std::complex<double> > toComplexAndFFT(std::vector<int> A) {
+std::vector<std::complex<float> > toComplexAndFFT(std::vector<int> A) {
     auto Ac = toComplexVector(A);
     FFT(Ac);
     return Ac;
 }
 
 //Ac = FFT(A), Bc = FFT(B)
-std::vector<int> combineCoinSetsPart2(std::vector<std::complex<double> > Ac, std::vector<std::complex<double> > Bc, bool removeCoinsAfterHalf) {
+std::vector<int> combineCoinSetsPart2(std::vector<std::complex<float> > Ac, std::vector<std::complex<float> > Bc, bool removeCoinsAfterHalf) {
     std::vector<int> A(Ac.size());
     for(int i=0;i<(int)A.size();i++)
         Ac[i] *= Bc[i];
@@ -117,22 +110,12 @@ std::vector<int> combineCoinSetsPart2(std::vector<std::complex<double> > Ac, std
 
 //A and B should be of lenght 2^k, where 2^k > 2*t
 std::vector<int> combineCoinSets(std::vector<int> A, std::vector<int> B, bool removeCoinsAfterHalf = true) {
-    auto Ac = toComplexAndFFT(A), Bc = toComplexAndFFT(B);
-    return combineCoinSetsPart2(Ac,Bc,removeCoinsAfterHalf);
-}
-
-std::vector<int> combineCoinSets(std::vector<int> A, std::vector<std::complex<double> > Bc, bool removeCoinsAfterHalf = true) {
     auto Ac = toComplexAndFFT(A);
-    return combineCoinSetsPart2(Ac,Bc,removeCoinsAfterHalf);
+    if(A == B)
+        return combineCoinSetsPart2(Ac,Ac,removeCoinsAfterHalf);
+    else
+        return combineCoinSetsPart2(Ac,toComplexAndFFT(B),removeCoinsAfterHalf);
 }
-
-//A and B should be of lenght 2^k, where 2^k > 2*t
-std::vector<int> combineCoinSetsWhereAEqualsB(std::vector<int> A,bool removeCoinsAfterHalf = true) {
-    auto Ac = toComplexAndFFT(A);
-    return combineCoinSetsPart2(Ac,Ac,removeCoinsAfterHalf);
-}
-
-
 
 
 std::vector<int> unallignedCombineCoinSets(std::vector<int> A, std::vector<int> B, int maxIndex) {
@@ -141,7 +124,7 @@ std::vector<int> unallignedCombineCoinSets(std::vector<int> A, std::vector<int> 
     if(A.size() < B.size())
         swap(A,B);
     int p = 1;
-    while(p <= 2*A.size())
+    while(p < 2*A.size())
         p <<=1;
     
     A.resize(p);

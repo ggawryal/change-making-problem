@@ -14,7 +14,7 @@ namespace smallU {
         std::vector<Num> dp(t+1,t+1);
         dp[0] = 0;
         for(int i=1;i<=t;i++) {
-            for(int j=n-1; j >= max(0LL,n-1-u*(long long)u/i); j--) {
+            for(int j=n-1; j >= std::max(0LL,n-1-u*(long long)u/i); j--) {
                 if(coins[j] <= i)
                     dp[i] = std::min(dp[i],dp[i-coins[j]]+1);    
             }

@@ -21,6 +21,11 @@ namespace classic {
         }
         return dp;
     }
+
+    template<class Num=int>
+    int getMinimumCoinNumberFor(std::vector<Num> coins, Num t) {
+        return getAllChangesUpTo(coins, t)[t];
+    }
 };
 
 #endif

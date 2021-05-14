@@ -25,7 +25,7 @@ namespace solution3 {
         if(m&1) {
             halfW1 = computeCmt(halfW1,m/2, t/2);
             halfW1.resize(t);
-            halfW1 = combineCoinSetsWhereAEqualsB(halfW1/*,halfW1*/);
+            halfW1 = combineCoinSets(halfW1,halfW1);
             return combineCoinSets(w1,halfW1);
         }
 
@@ -33,7 +33,7 @@ namespace solution3 {
         halfW1.resize(t);
 
         halfW1 = combineCoinSets(halfW1,w1);
-        return combineCoinSetsWhereAEqualsB(halfW1/*,halfW1*/);
+        return combineCoinSets(halfW1,halfW1);
     }
 
     template<class Num=int>
