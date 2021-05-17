@@ -7,8 +7,7 @@
 //O(n + t log^2t), decision version in O(n + t log t)
 //coins should be in sorted order
 namespace solution3 {
-    template<class Num=int>
-    std::vector<Num> computeCmt(std::vector<int> w1, int m, int t) {
+    std::vector<int> computeCmt(std::vector<int> w1, int m, int t) {
         if(m == 0) {
             for(int i=0;i<(int)w1.size();i++)
                 w1[i] = (i == 0 ? 1 : 0);
@@ -36,8 +35,7 @@ namespace solution3 {
         return combineCoinSets(halfW1,halfW1);
     }
 
-    template<class Num=int>
-    std::vector<int> getAllChangesUsingAtMost(Num m, const std::vector<Num>& coins, Num t) {
+    std::vector<int> getAllChangesUsingAtMost(int m, const std::vector<int>& coins, int t) {
         int p2 = 1;
         while(p2 <= 2*t)
             p2 <<=1;
@@ -53,14 +51,12 @@ namespace solution3 {
         return computeCmt(w,m,p2);
     }
 
-    template<class Num=int>
-    bool canChangeUsingAtMost(Num m, const std::vector<Num>& coins, Num t) {
+    bool canChangeUsingAtMost(int m, const std::vector<int>& coins, int t) {
         return getAllChangesUsingAtMost(m,coins,t)[t];
     }
 
-    template<class Num=int>
-    Num getMinimumCoinNumberFor(const std::vector<Num>& coins, Num t) {
-        Num l=0, r=t, m, res=-1;
+    int getMinimumCoinNumberFor(const std::vector<int>& coins, int t) {
+        int l=0, r=t, m, res=-1;
         while(l <= r) {
             m = (l+r)/2;
             if(canChangeUsingAtMost(m,coins,t))

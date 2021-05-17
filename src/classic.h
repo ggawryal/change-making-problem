@@ -4,12 +4,11 @@
 
 namespace classic {
     //classic O(nt) dynamic programming solution
-    template<class Num=int>
-    std::vector<Num> getAllChangesUpTo(std::vector<Num> coins, Num t) {
+    std::vector<int> getAllChangesUpTo(std::vector<int> coins, int t) {
         const int n = coins.size();
 
         //dp[x] means minimum number of coins needed to change x or -1, if impossible
-        std::vector<Num> dp(t+1,t+1);
+        std::vector<int> dp(t+1,t+1);
         dp[0] = 0;
         for(int i=0;i<=t;i++) {
             if(dp[i] > t) {
@@ -22,8 +21,7 @@ namespace classic {
         return dp;
     }
 
-    template<class Num=int>
-    int getMinimumCoinNumberFor(std::vector<Num> coins, Num t) {
+    int getMinimumCoinNumberFor(std::vector<int> coins, int t) {
         return getAllChangesUpTo(coins, t)[t];
     }
 };

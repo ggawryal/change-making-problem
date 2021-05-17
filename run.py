@@ -1,5 +1,7 @@
 import subprocess
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def printAndRunCommand(command):
     print(command)
@@ -65,3 +67,18 @@ def compile_solutions():
 
 compile_solutions()
 printAndRunCommand('./test_correctness')
+printAndRunCommand('./benchmark')
+
+def plotFromFile(name):
+    df = pd.read_csv('data/'+name+'.csv')
+    xs = [float(x) for x in df.columns if x != 'name']
+    for i, row in df.iterrows():
+        ys = [float(x) for x in row[1:]]
+        plt.plot(xs,ys,label=row['name'])
+    plt.legend()
+    plt.savefig('plot_'+str(name)+'.png')
+    plt.clf()
+
+plotFromFile('t_time')
+plotFromFile('smallu_classic')
+plotFromFile('smallu_single_target_sol')

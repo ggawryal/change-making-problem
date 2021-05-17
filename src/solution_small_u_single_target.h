@@ -7,9 +7,8 @@
 //O(u log u log^2 t) or O(u log^3 u)
 //coins should be in sorted order
 namespace smallUSingleTarget {
-    template<class Num=int>
     //w1 has size u+1
-     std::vector<Num> computeLastFewValuesOfCmt(const std::vector<int>& w1, int m, int t, int u) { // returns C_m^t[t - 4u, ..., t]
+     std::vector<int> computeLastFewValuesOfCmt(const std::vector<int>& w1, int m, int t, int u) { // returns C_m^t[t - 4u, ..., t]
         if(u >= t) {
             int p2 = 1;
             while(p2 <= 2*u)
@@ -61,8 +60,7 @@ namespace smallUSingleTarget {
         return std::vector<int>(c_half.end() - std::min((int)c_half.size(),6*u+1), c_half.end()-2*u);
     }
 
-    template<class Num=int>
-    std::vector<int> getLastFewChanges(Num m, const std::vector<Num>& coins, Num t) {
+    std::vector<int> getLastFewChanges(int m, const std::vector<int>& coins, int t) {
         std::vector<int> w(coins.back()+1);
         w[0] = 1;
         for(auto &c : coins)
@@ -71,13 +69,11 @@ namespace smallUSingleTarget {
         return computeLastFewValuesOfCmt(w,m,t,coins.back());
     }
 
-    template<class Num=int>
-    bool canChangeUsingAtMost(Num m, const std::vector<Num>& coins, Num t) {
+    bool canChangeUsingAtMost(int m, const std::vector<int>& coins, int t) {
         return getLastFewChanges(m,coins,t).back();
     }
 
-    template<class Num=int>
-    Num getMinimumCoinNumberFor(std::vector<Num> coins, Num t) {
+    int getMinimumCoinNumberFor(std::vector<int> coins, int t) {
         while(coins.back() > t)
             coins.pop_back();
 
@@ -87,7 +83,7 @@ namespace smallUSingleTarget {
             t -= additionalMaxCoins*coins.back();
         }
 
-        Num l=0, r=t, m, res=-1;
+        int l=0, r=t, m, res=-1;
         while(l <= r) {
             m = (l+r)/2;
             if(canChangeUsingAtMost(m,coins,t))

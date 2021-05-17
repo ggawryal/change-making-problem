@@ -41,12 +41,13 @@ int main(int argc, char** argv) {
     cout<<"Testing correctness of all solutions\n";
     int iters = (argc >= 2 ? atoi(argv[1]) : 1024);
     cout<<"Testing on some custom examples: ";
-    handTests(smallU::getMinimumCoinNumberFor<int>);
-    handTests(solution1::getMinimumCoinNumberFor<int>);
-    handTests(solution2::getMinimumCoinNumberFor<int>);
-    handTests(solution3::getMinimumCoinNumberFor<int>);
-    handTests(smallUSingleTarget::getMinimumCoinNumberFor<int>);
-    handTests(solution4::getMinimumCoinNumberFor<int>);
+    handTests(classic::getMinimumCoinNumberFor);
+    handTests(solution1::getMinimumCoinNumberFor);
+    handTests(solution2::getMinimumCoinNumberFor);
+    handTests(solution3::getMinimumCoinNumberFor);
+    handTests(solution4::getMinimumCoinNumberFor);
+    handTests(smallU::getMinimumCoinNumberFor);
+    handTests(smallUSingleTarget::getMinimumCoinNumberFor);
     cout<<"passed\n";
     cout<<"Testing on randomly generated testcases:\n";
     for(int k=0;k<iters;k++) {
@@ -66,13 +67,14 @@ int main(int argc, char** argv) {
             int t = testGenerators::randInt((n+1)*(mod+1),4*(n+1)*(mod+1)); 
             testcase = testGenerators::hardModularRests(restsNumber,mod,n,t);
         }
-        int x0 = smallU::getAllChangesUpTo(testcase.first, testcase.second)[testcase.second];
+        int x0 = classic::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x1 = solution1::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x2 = solution2::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x3 = solution3::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x4 = solution4::getMinimumCoinNumberFor(testcase.first, testcase.second);
-        int x5 = smallUSingleTarget::getMinimumCoinNumberFor(testcase.first, testcase.second);
-        assert(x0 == x1 && x1 == x2 && x2 == x3 && x3 == x4 && x4 == x5);
+        int x5 = smallU::getMinimumCoinNumberFor(testcase.first, testcase.second);
+        int x6 = smallUSingleTarget::getMinimumCoinNumberFor(testcase.first, testcase.second);
+        assert(x0 == x1 && x1 == x2 && x2 == x3 && x3 == x4 && x4 == x5 && x5 == x6);
         if((k&(-k)) == k)
             cerr<<k<<" testcases passed"<<endl;
     }
