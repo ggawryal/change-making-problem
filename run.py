@@ -1,7 +1,5 @@
 import subprocess
 import os
-import pandas as pd
-import matplotlib.pyplot as plt
 
 def printAndRunCommand(command):
     print(command)
@@ -68,6 +66,9 @@ def compile_solutions():
 compile_solutions()
 printAndRunCommand('./test_correctness')
 printAndRunCommand('./benchmark')
+
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def plotFromFile(name):
     df = pd.read_csv('data/'+name+'.csv')
