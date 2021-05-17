@@ -22,14 +22,18 @@ typedef function<int(vector<int>, int)>  coinFunc;
 typedef pair<vector<int>,int> Test;
 
 
-double measure(coinFunc solution, Test test) {
-    auto start = chrono::high_resolution_clock::now();
-    solution(test.first,test.second);
-    auto delta = chrono::high_resolution_clock::now() - start;
-    return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count()/1e3;
+double measure(coinFunc solution, Test test, int runs) {
+    double res = 0;
+    for(int run=0;run < runs; run++) {
+        auto start = chrono::high_resolution_clock::now();
+        solution(test.first,test.second);
+        auto delta = chrono::high_resolution_clock::now() - start;
+        res += std::chrono::duration_cast<std::chrono::milliseconds>(delta).count()/(1e3*runs);
+    }
+    return res;
 }
 
-void tAndTime() {
+void tAndTime(int runs) {
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
         {"small u", smallU::getMinimumCoinNumberFor},
@@ -39,7 +43,7 @@ void tAndTime() {
         {"solution3", solution3::getMinimumCoinNumberFor},
         {"solution4", solution4::getMinimumCoinNumberFor},
     };
-    const vector<int> ts = {10000, 50000, 100000, 200000, 500000, 1000000, 2000000};
+    const vector<int> ts = {10000, 50000, 100000, 200000, 500000, 1000000};
     vector<Test> tests;
     for(auto t : ts) {
         int n = min(t/10, 5000);
@@ -58,7 +62,7 @@ void tAndTime() {
         cerr<<"measuring "<<name<<endl;
         out<<name;
         for(auto test : tests) {
-            double seconds = measure(solution,test);
+            double seconds = measure(solution,test,runs);
             out.precision(3);
             out<<", "<<fixed<<seconds<<flush;
         }
@@ -66,7 +70,7 @@ void tAndTime() {
     }
 } 
 
-void smallUvsClassic() {
+void smallUvsClassic(int runs) {
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
         {"small u", smallU::getMinimumCoinNumberFor}
@@ -92,7 +96,7 @@ void smallUvsClassic() {
         cerr<<"measuring "<<name<<endl;
         out<<name;
         for(auto test : tests) {
-            double seconds = measure(solution,test);
+            double seconds = measure(solution,test,runs);
             out.precision(3);
             out<<", "<<fixed<<seconds<<flush;
         }
@@ -100,7 +104,7 @@ void smallUvsClassic() {
     }
 }
 
-void smallUSingleTargetVsSol() {
+void smallUSingleTargetVsSol(int runs) {
     const vector<pair<string,coinFunc> > solutions = {
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
         {"solution 3", solution3::getMinimumCoinNumberFor},
@@ -128,7 +132,7 @@ void smallUSingleTargetVsSol() {
         cerr<<"measuring "<<name<<endl;
         out<<name;
         for(auto test : tests) {
-            double seconds = measure(solution,test);
+            double seconds = measure(solution,test,runs);
             out.precision(3);
             out<<", "<<fixed<<seconds<<flush;
         }
@@ -136,8 +140,45 @@ void smallUSingleTargetVsSol() {
     }
 }
 
-int main(int argc, char** argv) {  
-    tAndTime();
-    smallUvsClassic();
-    smallUSingleTargetVsSol();
+void fftComparision(int runs) {
+    auto solution = solution4::getMinimumCoinNumberFor;
+    const vector<int> ts = {(1<<17)-5, (1<<18)-5, (1<<19)-5, (1<<20)-5};
+    vector<Test> tests;
+    for(auto t : ts) {
+        int n = min(t/2, 5000);
+        tests.push_back({testGenerators::randomTest(n, 1, t, t, t)});
+    }
+    ofstream out;
+    out.open("data/fft_comparision.csv");
+    out<<"name";
+    for(auto t :ts)
+        out<<", "<<t;
+    out<<endl;
+
+    int prev_use_fftw = use_fftw;
+    for(int i=0;i<2;i++) {
+        if(i == 0)
+            out<<"iterative fft";
+        else
+            out<<"fftw";
+        
+        use_fftw = i;
+        for(auto test : tests) {
+            double seconds = measure(solution,test,runs);
+            out.precision(3);
+            out<<", "<<fixed<<seconds<<flush;
+        }
+        out<<endl;
+    }
+    use_fftw = prev_use_fftw;
+}
+
+int main(int argc, char** argv) {
+    int runs = 1;
+    if(argc >= 2)
+        runs = atoi(argv[1]);
+    tAndTime(runs);
+    smallUvsClassic(runs);
+    smallUSingleTargetVsSol(runs);
+    fftComparision(runs);
 }

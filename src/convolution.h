@@ -2,11 +2,47 @@
 #define COIN_CHANGE_CONVOLUTION
 #include <vector>
 #include <complex>
-#include <fftw3.h>
 const float PI = acos(-1);
 
+void iterativeFFT(std::vector<std::complex<float> >&A, int t=1) {
+    typedef std::complex<float> C;
+
+    const int n = A.size();
+
+    std::vector<C> e(n);
+    for(int i=0;i<n;i++)
+        e[i] = exp(C(0,t*2*PI*i/n));
+
+    for(int i=0;i<n;i++) {
+        int j=0; 
+        for(int k=1; k<n; k<<=1, j<<=1)
+            if(k&i) j++;
+        j>>=1; 
+        if(i<j) 
+            std::swap(A[i], A[j]);
+    }
+
+    int k = 0;
+    while((1<<k)<n) 
+        k++;
+    
+    for(int m=2;m<=n;m<<=1) {
+        k--;
+        for(int i=0; i<n; i+=m) {
+            for(int j=0; j<m/2; j++) {
+                C u = A[i+j];
+                C v = e[j<<k]*A[i+j+m/2];
+                A[i+j] = u+v;
+                A[i+j+m/2] = u-v;
+            }
+        }
+    }
+}
+
+static int use_fftw = true;
 //select fft version
 #ifndef DONT_USE_FFTW
+#include <fftw3.h>
 void FFTW(std::vector<std::complex<float> >&A, int t=1) {
     const int n = A.size();
     if(t == 1) {
@@ -42,43 +78,10 @@ void FFTW(std::vector<std::complex<float> >&A, int t=1) {
         fftwf_free(in); fftwf_free(out);
     }
 }
-void FFT(std::vector<std::complex<float> >&A, int t=1) {return FFTW(A,t);}
+
+void FFT(std::vector<std::complex<float> >&A, int t=1) {if(use_fftw) return FFTW(A,t); return iterativeFFT(A,t);}
 
 #else
-void iterativeFFT(std::vector<std::complex<float> >&A, int t=1) {
-    typedef std::complex<float> C;
-
-    const int n = A.size();
-
-    std::vector<C> e(n);
-    for(int i=0;i<n;i++)
-        e[i] = exp(C(0,t*2*PI*i/n));
-
-    for(int i=0;i<n;i++) {
-        int j=0; 
-        for(int k=1; k<n; k<<=1, j<<=1)
-            if(k&i) j++;
-        j>>=1; 
-        if(i<j) 
-            std::swap(A[i], A[j]);
-    }
-
-    int k = 0;
-    while((1<<k)<n) 
-        k++;
-    
-    for(int m=2;m<=n;m<<=1) {
-        k--;
-        for(int i=0; i<n; i+=m) {
-            for(int j=0; j<m/2; j++) {
-                C u = A[i+j];
-                C v = e[j<<k]*A[i+j+m/2];
-                A[i+j] = u+v;
-                A[i+j+m/2] = u-v;
-            }
-        }
-    }
-}
 void FFT(std::vector<std::complex<float> >&A, int t=1) {return iterativeFFT(A,t);}
 #endif
 

@@ -65,7 +65,7 @@ def compile_solutions():
 
 compile_solutions()
 printAndRunCommand('./test_correctness')
-printAndRunCommand('./benchmark')
+printAndRunCommand('./benchmark 5')
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -83,3 +83,4 @@ def plotFromFile(name):
 plotFromFile('t_time')
 plotFromFile('smallu_classic')
 plotFromFile('smallu_single_target_sol')
+plotFromFile('fft_comparision')
