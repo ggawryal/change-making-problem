@@ -19,19 +19,15 @@ def install_fftw():
     retry = True
     while retry:
         r = try_install_fftw()
-        retry = False
-        if r in (1,2):
+        if r == 0:
+            retry = False
+        else:
             print('retry? (y/n)')
             retry = True if input() == 'y' else False
-        elif r == 3:
-            print('retry with sudo? (y/n)')
-            if input() == 'y':
-                printAndRunCommand('cd fftw-3.3.9 && sudo make install')
-            return
 
 
 def try_compile_solutions(use_fftw):
-    flags = ' -lfftw3f' if use_fftw else ' -DDONT_USE_FFTW_LIB'
+    flags = ' -Lfftw-3.3.9/lib -Ifftw-3.3.9/include -lfftw3f -lm' if use_fftw else ' -DDONT_USE_FFTW_LIB'
     printAndRunCommand('g++ -std=c++11 -O3 benchmark.cpp -o benchmark' + flags)
     if not os.path.isfile('benchmark'):
         return False
