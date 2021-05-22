@@ -1,18 +1,19 @@
 import subprocess
 import os
 
+directory = os.path.dirname(os.path.realpath(__file__))
+
+
+
 def printAndRunCommand(command):
     print(command)
-    os.system(command)
+    r = subprocess.call(command.split())
+    return r
 
 def try_install_fftw():
-    script = 'fftw_install.sh'
+    script = os.path.join(directory,'fftw_install.sh')
     printAndRunCommand('chmod u+x '+script)
-    command = './' + script
-    print(command)
-    r = subprocess.Popen([command])
-    r.communicate()[0]
-    return r.returncode
+    return printAndRunCommand(script)
 
 def install_fftw():
     print('downloading and installing fftw library')
@@ -27,12 +28,12 @@ def install_fftw():
 
 
 def try_compile_solutions(use_fftw):
-    flags = ' -Lfftw-3.3.9/lib -Ifftw-3.3.9/include -lfftw3f -lm' if use_fftw else ' -DDONT_USE_FFTW_LIB'
-    printAndRunCommand('g++ -std=c++11 -O3 benchmark.cpp -o benchmark' + flags)
-    if not os.path.isfile('benchmark'):
+    flags = ' -L'+os.path.join(directory,'fftw-3.3.9','lib') + ' -I'+os.path.join(directory,'fftw-3.3.9','include')+ ' -lfftw3f -lm' if use_fftw else ' -DDONT_USE_FFTW_LIB'
+    returnCode = printAndRunCommand('g++ -std=c++11 -O3 '+os.path.join(directory,'benchmark.cpp') + ' -o '+os.path.join(directory,'benchmark') + flags)
+    if returnCode != 0:
         return False
-    printAndRunCommand('g++ -std=c++11 -O3 test_correctness.cpp -o test_correctness' + flags)
-    if not os.path.isfile('test_correctness'): 
+    returnCode = printAndRunCommand('g++ -std=c++11 -O3 '+os.path.join(directory,'test_correctness.cpp') +' -o '+os.path.join(directory,'test_correctness') + flags)
+    if returnCode != 0:
         return False
     return True
 
@@ -58,25 +59,34 @@ def compile_solutions():
             print('compilation finished succesfully ' + ('with fftw library' if use_fftw else 'with slower fft written by author'))
             retry = False
 
-
+print(os.path.join(directory,'data'))
 compile_solutions()
-printAndRunCommand('./test_correctness')
-printAndRunCommand('./benchmark 5')
+printAndRunCommand(os.path.join(directory,'test_correctness') )
+printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
 def plotFromFile(name):
-    df = pd.read_csv('data/'+name+'.csv')
+    df = pd.read_csv(os.path.join(directory,'data',name+'.csv'))
     xs = [float(x) for x in df.columns if x != 'name']
+    labelToStyle = {
+        'classic': ('blue','--'),
+        'solution 1': ('orange',':'),
+        'solution 2': ('olive','--'),
+        'solution 3': ('purple','-.'),
+        'solution 4': ('red','-'),
+        'small u': ('brown', '-'),
+        'small u single target': ('pink','--')
+    }
     for i, row in df.iterrows():
         ys = [float(x) for x in row[1:]]
-        plt.plot(xs,ys,label=row['name'])
+        plt.plot(xs,ys,label=row['name'],color=labelToStyle[row['name']][0], linestyle=labelToStyle[row['name']][1])
     plt.legend()
-    plt.savefig('plot_'+str(name)+'.png')
+    plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.png'))
     plt.clf()
 
 plotFromFile('t_time')
 plotFromFile('smallu_classic')
-plotFromFile('smallu_single_target_sol')
-plotFromFile('fft_comparision')
+plotFromFile('smallusingletarget_sol')
+plotFromFile('n_time')

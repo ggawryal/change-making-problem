@@ -48,7 +48,9 @@ namespace solution3 {
             w[c] = 1;
         }
        
-        return computeCmt(w,m,p2);
+        auto result = computeCmt(w,m,p2);
+        result.resize(t+1);
+        return result;
     }
 
     bool canChangeUsingAtMost(int m, const std::vector<int>& coins, int t) {

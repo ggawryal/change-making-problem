@@ -18,7 +18,7 @@ namespace solution2 {
             w[0][c] = 1;
 
 
-        while((1<<(int)w.size()) < p2 /*&& w.back()[t] == 0*/)
+        while((1<<(int)w.size()) < p2 && w.back()[t] == 0)
             w.push_back(combineCoinSets(w.back(),w.back()));
         if(w.back()[t] == 0)
             return -1;

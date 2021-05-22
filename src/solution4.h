@@ -8,31 +8,31 @@
 //O(n + t log(t) loglog(t))
 namespace solution4 {
     int getMinimumCoinNumberFor(std::vector<int> coins, int t) {
-        int p2 = 1;
         int k = 0;
-        while(p2 <= 2*t) {
-            p2 <<=1;
+        for(int p2 = 1; p2 < t; p2 <<=1)
             k++;
-        }
 
         //binary search 2^l such that m* is in (2^l, 2^(l+1)]
+        std::vector<int> C;
         int low=0,high=k,mid,l=-1;
         while(low <= high) {
             mid = (low+high)/2;
-            if(solution3::canChangeUsingAtMost(1<<mid,coins,t))
+            auto changes = solution3::getAllChangesUsingAtMost(1<<mid,coins,t);
+            if(changes[t])
                 high = mid-1;
             else {
                 low = mid+1;
                 l = mid;
+                C = std::move(changes);
             }
         }
-        if(l == -1) 
+        if(l == -1)
             return t != 0;
-        if(l == k)
+
+        if(l == k) //if it's not possible to change using at most (1<<k) >= t coins, then it's not possible at all
             return -1;
-        
-        std::vector<int> C = solution3::getAllChangesUsingAtMost((1<<l),coins,t);
-        C.resize(t+1);
+
+        //at this point, C = solution3::getAllChangesUsingAtMost((1<<l),coins,t);
         int res = (1<<l);
         int indexShift = 0;
         for(int i=l;i>=0;i--) {

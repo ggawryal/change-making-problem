@@ -28,18 +28,21 @@ void handTests(function<int(vector<int>,int)> f) {
     assert(f({1,2,3,4},8) == 2);
     assert(f({1,2,3,4},16) == 4);
     assert(f({1,2,4,8,16,32,64,128},255) == 8);
+
+    assert(f({1},255) == 255);
+    assert(f({1},256) == 256);
+    assert(f({1},257) == 257);
     assert(f({1},1543) == 1543);
+    
     assert(f({2},1024) == 512);
     assert(f({2, 31, 33, 39}, 46) == 23);
     assert(f({10, 116, 469, 474, 613},1050) == 48);
 }
 
 
-
-
 int main(int argc, char** argv) {
     cout<<"Testing correctness of all solutions\n";
-    int iters = (argc >= 2 ? atoi(argv[1]) : 1024);
+    int iters = (argc >= 2 ? atoi(argv[1]) : 2050);
     cout<<"Testing on some custom examples: ";
     handTests(classic::getMinimumCoinNumberFor);
     handTests(solution1::getMinimumCoinNumberFor);
@@ -50,14 +53,14 @@ int main(int argc, char** argv) {
     handTests(smallUSingleTarget::getMinimumCoinNumberFor);
     cout<<"passed\n";
     cout<<"Testing on randomly generated testcases:\n";
-    for(int k=0;k<iters;k++) {
+    for(int k=1;k<iters;k++) {
         pair<vector<int>,int> testcase;
         int n = testGenerators::randInt(1,20);
-        if(k%3 == 0) {
+        if(k%3 == 1) {
             int t = testGenerators::randInt(n+1,(rand() % 2 ? 100 : 2000)); 
             testcase = testGenerators::randomTest(n, 1, t-1, t, t);
         }
-        else if(k%3 == 1){
+        else if(k%3 == 2){
             int t = testGenerators::randInt(n*n,800); 
             testcase = testGenerators::smallModulos(n,t, sqrt(t), testGenerators::randInt(1,3,-1));
         }
@@ -78,5 +81,6 @@ int main(int argc, char** argv) {
         if((k&(-k)) == k)
             cerr<<k<<" testcases passed"<<endl;
     }
+    cerr<<"all tests passed"<<endl;
     return 0;
 }
