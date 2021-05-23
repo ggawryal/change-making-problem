@@ -41,9 +41,9 @@ void handTests(function<int(vector<int>,int)> f) {
 
 
 int main(int argc, char** argv) {
-    cout<<"Testing correctness of all solutions\n";
+    cout<<"Testing correctness of all solutions"<<endl;
     int iters = (argc >= 2 ? atoi(argv[1]) : 2050);
-    cout<<"Testing on some custom examples: ";
+    cout<<"Testing on some custom examples: "<<flush;
     handTests(classic::getMinimumCoinNumberFor);
     handTests(solution1::getMinimumCoinNumberFor);
     handTests(solution2::getMinimumCoinNumberFor);
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     handTests(smallU::getMinimumCoinNumberFor);
     handTests(smallUSingleTarget::getMinimumCoinNumberFor);
     cout<<"passed\n";
-    cout<<"Testing on randomly generated testcases:\n";
+    cout<<"Testing on randomly generated testcases:"<<endl;
     for(int k=1;k<iters;k++) {
         pair<vector<int>,int> testcase;
         int n = testGenerators::randInt(1,20);

@@ -32,7 +32,7 @@ def try_compile_solutions(use_fftw):
     returnCode = printAndRunCommand('g++ -std=c++11 -O3 '+os.path.join(directory,'benchmark.cpp') + ' -o '+os.path.join(directory,'benchmark') + flags)
     if returnCode != 0:
         return False
-    returnCode = printAndRunCommand('g++ -std=c++11 -O3 '+os.path.join(directory,'test_correctness.cpp') +' -o '+os.path.join(directory,'test_correctness') + flags)
+    returnCode = printAndRunCommand('g++ -std=c++11 -Og '+os.path.join(directory,'test_correctness.cpp') +' -o '+os.path.join(directory,'test_correctness') + flags)
     if returnCode != 0:
         return False
     return True
@@ -59,9 +59,11 @@ def compile_solutions():
             print('compilation finished succesfully ' + ('with fftw library' if use_fftw else 'with slower fft written by author'))
             retry = False
 
-print(os.path.join(directory,'data'))
 compile_solutions()
-printAndRunCommand(os.path.join(directory,'test_correctness') )
+exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
+if exit_code != 0:
+    print("some testcases failed!")
+    exit(0)
 printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))
 
 import pandas as pd
@@ -71,7 +73,7 @@ def plotFromFile(name):
     df = pd.read_csv(os.path.join(directory,'data',name+'.csv'))
     xs = [float(x) for x in df.columns if x != 'name']
     labelToStyle = {
-        'classic': ('blue','--'),
+        'classic': ('blue',':'),
         'solution 1': ('orange',':'),
         'solution 2': ('olive','--'),
         'solution 3': ('purple','-.'),
@@ -83,7 +85,7 @@ def plotFromFile(name):
         ys = [float(x) for x in row[1:]]
         plt.plot(xs,ys,label=row['name'],color=labelToStyle[row['name']][0], linestyle=labelToStyle[row['name']][1])
     plt.legend()
-    plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.png'))
+    plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.png'),dpi=200)
     plt.clf()
 
 plotFromFile('t_time')

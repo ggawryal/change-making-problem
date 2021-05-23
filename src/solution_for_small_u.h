@@ -12,10 +12,12 @@ namespace smallU {
         //dp[x] means minimum number of coins needed to change x or -1, if impossible
         std::vector<int> dp(t+1,t+1);
         dp[0] = 0;
-        for(int i=1;i<=t;i++) {
-            for(int j=n-1; j >= std::max(0LL,n-1-u*(long long)u/i); j--) {
-                if(coins[j] <= i)
-                    dp[i] = std::min(dp[i],dp[i-coins[j]]+1);    
+        int coinIdx = coins[0] == 0 ? 1 : 0;
+        for(int i=1;i<=t;i++)  { 
+            if(coinIdx < n && coins[coinIdx] == i)
+                coinIdx++;
+            for(int j=coinIdx-1; j >= std::max(0LL,n-1-u*(long long)u/i); j--) {
+                dp[i] = std::min(dp[i],dp[i-coins[j]]+1);  //using coinIdx guarantees that i >= coins[j]
             }
         }
         std::replace_if(dp.begin(), dp.end(), [&](int a) {return a > t;}, -1);

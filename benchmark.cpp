@@ -60,7 +60,6 @@ void tAndTime(int runs, string saveDirectory) {
     cerr<<"preparing data for t, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
-        {"small u", smallU::getMinimumCoinNumberFor},
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
         {"solution 1", solution1::getMinimumCoinNumberFor},
         {"solution 2", solution2::getMinimumCoinNumberFor},
@@ -115,6 +114,7 @@ void smallUvsClassic(int runs, string saveDirectory) {
 void smallUSingleTargetVsSol(int runs, string saveDirectory) {
     const vector<pair<string,coinFunc> > solutions = {
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
+        {"solution 2", solution2::getMinimumCoinNumberFor},
         {"solution 3", solution3::getMinimumCoinNumberFor},
         {"solution 4", solution4::getMinimumCoinNumberFor}
     };
@@ -145,6 +145,7 @@ void nAndTime(int runs, string saveDirectory) {
     cerr<<"preparing data for n, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
+        {"solution 2", solution2::getMinimumCoinNumberFor},
         {"solution 4", solution4::getMinimumCoinNumberFor}
     };
     vector<int> ns = {200,300,400,500,600,700,800,1000};
