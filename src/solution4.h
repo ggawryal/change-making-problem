@@ -35,7 +35,7 @@ namespace solution4 {
         //at this point, C = solution3::getAllChangesUsingAtMost((1<<l),coins,t);
         int res = (1<<l);
         int indexShift = 0;
-        for(int i=l;i>=0;i--) {
+        for(int i=l-1;i>=0;i--) {
             if(i < l-1) {
                 std::vector<int> C2((t>>(l-i-1))+1);
                 for(int j=0;j<C2.size();j++)

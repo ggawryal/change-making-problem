@@ -25,21 +25,21 @@ typedef pair<vector<int>,int> Test;
 double measure(coinFunc solution, Test test) {
     double res = 0;
     auto start = chrono::high_resolution_clock::now();
-    solution(test.first,test.second);
+    int x = solution(test.first,test.second);
     auto delta = chrono::high_resolution_clock::now() - start;
     return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
 }
 
 
 template<class T>
-void save_to_csv(const string& name, const vector<T>& xPoints, const vector<pair<string,coinFunc> >& solutions, const vector<vector<double> >& times, const string& saveDirectory) {
+void save_to_csv(const string& name, const vector<T>& xPoints, const string& xPointsLabel, const vector<pair<string,coinFunc> >& solutions, const vector<vector<double> >& times, const string& saveDirectory) {
     ofstream out;
     out.open(saveDirectory + name + ".csv");
     if(out.bad()) {
         cerr<<"file opening failed"<<endl;
         exit(1);
     }
-    out<<"name";
+    out<<xPointsLabel;
     out.precision(3);
     for(auto x :xPoints) 
         out<<", "<<x;
@@ -82,7 +82,7 @@ void tAndTime(int runs, string saveDirectory) {
             test_index++;
         }
     }
-    save_to_csv("t_time",ts,solutions,times, saveDirectory);
+    save_to_csv("t_time",ts,"t",solutions,times, saveDirectory);
 }
 
 void smallUvsClassic(int runs, string saveDirectory) {
@@ -108,7 +108,7 @@ void smallUvsClassic(int runs, string saveDirectory) {
             test_index++;
         }
     }
-    save_to_csv("smallu_classic",us,solutions,times, saveDirectory);
+    save_to_csv("smallu_classic",us,"u",solutions,times, saveDirectory);
 }
 
 void smallUSingleTargetVsSol(int runs, string saveDirectory) {
@@ -138,7 +138,7 @@ void smallUSingleTargetVsSol(int runs, string saveDirectory) {
             test_index++;
         }
     }
-    save_to_csv("smallusingletarget_sol",usFractions,solutions,times, saveDirectory);
+    save_to_csv("smallusingletarget_sol",usFractions,"u/t",solutions,times, saveDirectory);
 }
 
 void nAndTime(int runs, string saveDirectory) {
@@ -167,7 +167,35 @@ void nAndTime(int runs, string saveDirectory) {
             test_index++;
         }
     }
-    save_to_csv("n_time",ns,solutions,times, saveDirectory);
+    save_to_csv("n_time",ns,"n",solutions,times, saveDirectory);
+}
+
+void sol2Vs4OnBigAnswerTests(int runs, string saveDirectory) {
+    cerr<<"preparing data for sol 2 vs sol 4"<<endl;
+    const vector<pair<string,coinFunc> > solutions = {
+        {"solution 2", solution2::getMinimumCoinNumberFor},
+        {"solution 4", solution4::getMinimumCoinNumberFor},
+    };
+    
+    vector<int> logW(20);
+    iota(logW.begin(), logW.end(),1);
+
+    vector<vector<double> > times(solutions.size(), vector<double>(logW.size()));
+    for(int run=0;run < runs; run++) {
+        vector<Test> tests;
+        int test_index = 0;
+        for(auto l : logW) {
+            int M = (1<<(20-l));
+            auto test = testGenerators::randomTest(M,1,M, (1<<19)+5, (1<<20)-5);
+            int solution_index = 0;
+            for(auto nameAndSolution : solutions) {
+                times[solution_index][test_index] += measure(nameAndSolution.second,test)/runs;
+                solution_index++;
+            }
+            test_index++;
+        }
+    }
+    save_to_csv("sol2_vs_4_big_answer",logW,"lg(w)",solutions,times, saveDirectory);
 }
 
 int main(int argc, char** argv) {
@@ -177,6 +205,7 @@ int main(int argc, char** argv) {
     string saveDirectory = "data/";
     if(argc >= 3)
         saveDirectory = string(argv[2]);
+    sol2Vs4OnBigAnswerTests(runs, saveDirectory);
     tAndTime(runs,saveDirectory);
     smallUvsClassic(runs,saveDirectory);
     smallUSingleTargetVsSol(runs,saveDirectory);

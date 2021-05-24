@@ -60,18 +60,18 @@ def compile_solutions():
             retry = False
 
 compile_solutions()
-exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
+"""exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
 if exit_code != 0:
     print("some testcases failed!")
     exit(0)
-printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))
+printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
 def plotFromFile(name):
     df = pd.read_csv(os.path.join(directory,'data',name+'.csv'))
-    xs = [float(x) for x in df.columns if x != 'name']
+    xs = [float(x) for x in df.columns[1:]]
     labelToStyle = {
         'classic': ('blue',':'),
         'solution 1': ('orange',':'),
@@ -83,11 +83,14 @@ def plotFromFile(name):
     }
     for i, row in df.iterrows():
         ys = [float(x) for x in row[1:]]
-        plt.plot(xs,ys,label=row['name'],color=labelToStyle[row['name']][0], linestyle=labelToStyle[row['name']][1])
+        plt.plot(xs,ys,label=row.iloc[0],color=labelToStyle[row.iloc[0]][0], linestyle=labelToStyle[row.iloc[0]][1])
+    plt.xlabel(df.columns[0])
+    plt.ylabel('time  [s]')
     plt.legend()
     plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.png'),dpi=200)
     plt.clf()
 
+plotFromFile('sol2_vs_4_big_answer')
 plotFromFile('t_time')
 plotFromFile('smallu_classic')
 plotFromFile('smallusingletarget_sol')
