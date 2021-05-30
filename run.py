@@ -60,38 +60,57 @@ def compile_solutions():
             retry = False
 
 compile_solutions()
-"""exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
+exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
 if exit_code != 0:
     print("some testcases failed!")
     exit(0)
-printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))"""
+printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 
-def plotFromFile(name):
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Times New Roman']
+rcParams['mathtext.fontset'] = 'cm'
+
+def plotFromFile(name, log_scale = False):
     df = pd.read_csv(os.path.join(directory,'data',name+'.csv'))
+    x_name = df.columns[0]
     xs = [float(x) for x in df.columns[1:]]
     labelToStyle = {
-        'classic': ('blue',':'),
-        'solution 1': ('orange',':'),
-        'solution 2': ('olive','--'),
-        'solution 3': ('purple','-.'),
-        'solution 4': ('red','-'),
-        'small u': ('brown', '-'),
-        'small u single target': ('pink','--')
+        'classic': ('$O(nt)$, klasyczne','blue',':'),
+        'solution 1': ('$O(t\ \log^3 t)$','orange',':'),
+        'solution 2': ('$O(t\ \log t\ \log w)$','olive','--'),
+        'solution 3': ('$O(t\ \log^2 t)$, lemat o podziale','purple','-.'),
+        'solution 4': ('$O(t\ \log t\ \log \log t)$','red','-'),
+        'small u': ('$O(u^2 \log u)$','brown', '-'),
+        'small u single target': ('$\widetilde O(u)$','pink','--')
     }
     for i, row in df.iterrows():
-        ys = [float(x) for x in row[1:]]
-        plt.plot(xs,ys,label=row.iloc[0],color=labelToStyle[row.iloc[0]][0], linestyle=labelToStyle[row.iloc[0]][1])
-    plt.xlabel(df.columns[0])
-    plt.ylabel('time  [s]')
+        if not str(row.iloc[0]).startswith("avg_"):
+            continue
+        
+        curve_name = str(row.iloc[0])[4:]
+        style = labelToStyle[curve_name]
+        
+        avg_time = [float(x) for x in row[1:]]
+        stddev = [float(x) for x in df.loc[df[x_name] == 'stddev_'+curve_name].iloc[0][1:]]
+        plt.errorbar(xs,avg_time,stddev,label=style[0],color=style[1], linestyle=style[2],elinewidth=0.8,mew=1,capsize=1)
+
+
+    if log_scale:
+        plt.xscale('log')
+    else:
+        plt.ticklabel_format(axis="x",style='plain')
+    plt.xlabel(x_name)
+    plt.ylabel('czas [s]')
     plt.legend()
-    plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.png'),dpi=200)
+    plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.pdf'))
     plt.clf()
 
-plotFromFile('sol2_vs_4_big_answer')
 plotFromFile('t_time')
-plotFromFile('smallu_classic')
-plotFromFile('smallusingletarget_sol')
+plotFromFile('sol2_vs_4_big_answer',log_scale=True)
 plotFromFile('n_time')
+plotFromFile('smallusingletarget_sol')
+plotFromFile('smallu_classic')
