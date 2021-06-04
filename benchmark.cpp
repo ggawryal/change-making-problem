@@ -87,7 +87,7 @@ pair<vector<vector<double> >, vector<vector<double> > > measureTimes(vector<pair
 }
 
 
-void tAndTime(int runs, string saveDirectory) {
+void tAndTime(const int runs, const string&  saveDirectory) {
     cerr<<"preparing data for t, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -104,8 +104,7 @@ void tAndTime(int runs, string saveDirectory) {
     save_to_csv("t_time",ts,"reszta do wydania",solutions, avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-
-void smallUvsClassic(int runs, string saveDirectory) {
+void smallUvsClassic(const int runs, const string& saveDirectory) {
     cerr<<"preparing data for classic vs all targets u graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -118,7 +117,7 @@ void smallUvsClassic(int runs, string saveDirectory) {
     save_to_csv("smallu_classic",us,"wielkość największej monety",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void smallUSingleTargetVsSol(int runs, string saveDirectory) {
+void smallUSingleTargetVsSol(const int runs, const string& saveDirectory) {
     const vector<pair<string,coinFunc> > solutions = {
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
         {"solution 2", solution2::getMinimumCoinNumberFor},
@@ -135,7 +134,7 @@ void smallUSingleTargetVsSol(int runs, string saveDirectory) {
     save_to_csv("smallusingletarget_sol",usFractions,"największa moneta $/$ reszta do wydania",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void nAndTime(int runs, string saveDirectory) {
+void nAndTime(const int runs, const string& saveDirectory) {
     cerr<<"preparing data for n, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -152,7 +151,7 @@ void nAndTime(int runs, string saveDirectory) {
     save_to_csv("n_time",ns,"liczba monet",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void sol2Vs4OnBigAnswerTests(int runs, string saveDirectory) {
+void sol2Vs4OnBigAnswerTests(const int runs, const string& saveDirectory) {
     cerr<<"preparing data for sol 2 vs sol 4"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"solution 2", solution2::getMinimumCoinNumberFor},
@@ -173,6 +172,50 @@ void sol2Vs4OnBigAnswerTests(int runs, string saveDirectory) {
     save_to_csv("sol2_vs_4_big_answer",w,"wynik",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
+
+tuple<int,int,double,double> getStatisticsFromTest(Test test) {
+    auto sampleChanges = testStatisticsMeasurement::getAllPossibleCoinSetsForTarget(test.first, test.second, 10000);
+    vector<int> diffCoinsInChanges;
+    for(auto change:sampleChanges)
+        diffCoinsInChanges.push_back(unique(change.begin(),change.end()) - change.begin());
+    
+    int diffCoins = *min_element(diffCoinsInChanges.begin(), diffCoinsInChanges.end());
+    int w = testStatisticsMeasurement::calcDP(test.first, test.second).first[test.second];
+    int greedy = testStatisticsMeasurement::restsForWhichGreedyWorks(test.first, test.second).size();
+    int r10 = testStatisticsMeasurement::getResultsChangesAfterRemovingRandomCoins(test.first, test.second,0.5).size();
+    return {w, diffCoins, greedy/(double)test.second, r10/(double)test.second};
+}
+
+void printStatsForTestGenerator(const string& name, ofstream& out, int runs, function<Test()> testGenerator) {
+    double avgW = 0, avgDiffCoins = 0, avgGreedy = 0, avgR10 = 0;
+    for(int i=0;i<runs;i++) {
+        auto test = testGenerator();
+        auto stats = getStatisticsFromTest(test);
+        avgW += std::get<0>(stats)/(double)runs;
+        avgDiffCoins += std::get<1>(stats)/(double)runs;
+        avgGreedy += std::get<2>(stats)/(double)runs;
+        avgR10 += std::get<3>(stats)/(double)runs;
+    }
+    out<<name<<":\n";
+    out.precision(5);
+    out<<"Average result = "<<fixed<<avgW<<endl;
+    out<<"Average number of different coins used = "<<fixed<<avgDiffCoins<<endl;
+    out<<"Average percentage of targets for which greedy works = "<<fixed<<avgGreedy*100<<"%"<<endl;
+    out<<"Average percentage of targets for which result changes after removing 10% of coins = "<<fixed<<avgR10*100<<"%"<<endl;
+    out<<endl;
+}
+
+void printStatsForGenerators(int runs, const string& saveDirectory) {
+    cerr<<"printing statistics for test generators"<<endl;
+    const int t = 1e6-1;
+    ofstream out;
+    out.open(saveDirectory+"stats_test_generators.txt");
+    printStatsForTestGenerator("Fully random test", out, runs, [&](){return testGenerators::randomTest(2000,1,t-1,t,t);} );
+    printStatsForTestGenerator("Random test with smaller coins", out, runs, [&](){return testGenerators::randomTest(2000,4000,t,t,t,-49);} );
+    printStatsForTestGenerator("Small rests modulo", out, runs, [&](){return testGenerators::smallRestsModulo(2000,t,200,8);} );
+    printStatsForTestGenerator("Difficult rests modulo", out, runs, [&](){return testGenerators::difficultRestsModulo(10,2000,2000,t);} );
+}
+
 int main(int argc, char** argv) {
     int runs = 1;
     if(argc >= 2)
@@ -180,6 +223,8 @@ int main(int argc, char** argv) {
     string saveDirectory = "data/";
     if(argc >= 3)
         saveDirectory = string(argv[2]);
+
+    printStatsForGenerators(runs, saveDirectory);
     tAndTime(runs,saveDirectory);
     sol2Vs4OnBigAnswerTests(runs, saveDirectory);
     nAndTime(runs,saveDirectory);

@@ -56,20 +56,27 @@ int main(int argc, char** argv) {
     for(int k=1;k<iters;k++) {
         pair<vector<int>,int> testcase;
         int n = testGenerators::randInt(1,20);
-        if(k%3 == 1) {
-            int t = testGenerators::randInt(n+1,(rand() % 2 ? 100 : 2000)); 
-            testcase = testGenerators::randomTest(n, 1, t-1, t, t);
-        }
-        else if(k%3 == 2){
-            int t = testGenerators::randInt(n*n,800); 
-            testcase = testGenerators::smallModulos(n,t, sqrt(t), testGenerators::randInt(1,3,-1));
-        }
-        else {
-            int restsNumber = testGenerators::randInt(1,3);
-            int mod = testGenerators::randInt(16,30);
-            int t = testGenerators::randInt((n+1)*(mod+1),4*(n+1)*(mod+1)); 
-            testcase = testGenerators::hardModularRests(restsNumber,mod,n,t);
-        }
+        int t;
+        switch(k%4) {
+            case 0:
+                t = testGenerators::randInt(n+1,(testGenerators::randInt(0,1) ? 100 : 2000)); 
+                testcase = testGenerators::randomTest(n, 1, t-1, t, t);
+                break;
+            case 1:
+                t = testGenerators::randInt(4*n+30,4000); 
+                testcase = testGenerators::randomTest(n, testGenerators::randInt(1,20), t/4, t, t,-2);
+                break; 
+            case 2:
+                t = testGenerators::randInt(n*n,800); 
+                testcase = testGenerators::smallRestsModulo(n,t, sqrt(t), testGenerators::randInt(1,3,-1));
+                break;
+            default:
+                int restsNumber = testGenerators::randInt(1,3);
+                int mod = testGenerators::randInt(16,30);
+                t = testGenerators::randInt((n+1)*(mod+1),4*(n+1)*(mod+1)); 
+                testcase = testGenerators::difficultRestsModulo(restsNumber,mod,n,t);
+                break;
+        }       
         int x0 = classic::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x1 = solution1::getMinimumCoinNumberFor(testcase.first, testcase.second);
         int x2 = solution2::getMinimumCoinNumberFor(testcase.first, testcase.second);

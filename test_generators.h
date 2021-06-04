@@ -4,99 +4,7 @@
 #include <set>
 #include <map>
 #include <random>
-
-namespace testStatisticsMeasurement {
-
-    template<class Num=int>
-    std::pair<std::vector<Num>, std::vector<Num> > calcDP(std::vector<Num> coins, Num t) {
-        const int n = coins.size();
-        std::vector<Num> dp(t+1,t+1);
-        std::vector<Num> comeFrom(t+1,t+1);
-        dp[0] = 0;
-        for(int i=0;i<=t;i++) {
-            if(dp[i] > t) {
-                dp[i] = -1;
-                continue;
-            }
-            for(int j=0; j<n && i + coins[j] <= t;j++)
-                if(dp[i+coins[j]] > dp[i]+1) {    
-                    dp[i+coins[j]] = std::min(dp[i+coins[j]],dp[i]+1);
-                    comeFrom[i+coins[j]] = i;
-                }
-        }
-        return {dp,comeFrom};
-    }
-
-    std::vector<int> getCoins(int x, const std::vector<int>& comeFrom) {
-        std::vector<int> used;
-        while(x > 0){
-            used.push_back(x - comeFrom[x]);
-            x = comeFrom[x];
-        }
-        return used;
-    }
-
-    template<class Num=int>
-    std::vector<int> countHowManyDifferentCoinsAreUsedForEach(std::vector<Num> coins, Num t) {
-        auto p = calcDP(coins,t);
-        auto dp = p.first, comeFrom = p.second;
-        std::vector<int> res(t+1,-1);
-        for(int y=0;y<=t;y++) {
-            int x = y;
-            if(dp[x] == -1)
-                continue;
-
-            std::vector<int> used = getCoins(x,comeFrom);
-            std::sort(used.begin(),used.end());
-            used.erase(std::unique(used.begin(),used.end()),used.end());
-            res[y] = used.size();
-        }
-        return res;
-    } 
-
-    template<class Num=int>
-    std::map<int,int> countInHowManyChangesCoinIsUsed(std::vector<Num> coins, Num t) {
-        auto p = calcDP(coins,t);
-        auto dp = p.first, comeFrom = p.second;
-        std::map<int,int> usage;
-        for(auto a:coins)
-            usage[a] = 0;
-
-        for(int y=0;y<=t;y++) {
-            int x = y;
-            if(dp[x] == -1)
-                continue;
-
-            std::vector<int> used = getCoins(x,comeFrom);
-            std::sort(used.begin(),used.end());
-            used.erase(std::unique(used.begin(),used.end()),used.end());
-            for(auto a:used)
-                usage[a]++;
-        }
-        return usage;
-    } 
-
-    template<class Num=int>
-    std::vector<int> restsForWhichGreedyWorks(std::vector<Num> coins, Num t) {
-        auto dp = calcDP(coins,t).first;
-        std::vector<int> greedyRes(t+1);
-        std::vector<int> res;
-        for(int i=0;i<=t;i++) {
-            int t2 = i;
-            for(int j=coins.size()-1;j>=0;j--) {
-                while(t2 >= coins[j]) {
-                    t2 -= coins[j];
-                    greedyRes[i]++;
-                }
-            }
-            if(t2 != 0)
-                greedyRes[i] = -1;
-            if(greedyRes[i] == dp[i])
-                res.push_back(i);
-        }
-        return res;
-    }
-};
+#include <queue>
 
 namespace testGenerators {
     int RNG_SEED = 5343634;
@@ -110,6 +18,10 @@ namespace testGenerators {
             return std::min(std::uniform_int_distribution<int>(min, max)(rng), randInt(min,max,w+1));
     }
 
+    void shuffle(std::vector<int>& v) {
+        std::shuffle(v.begin(), v.end(),rng);
+    }
+
     std::pair<std::vector<int>, int> randomTest(int coins, int min, int max, int minT, int maxT, int w=0) {
         assert(max-min+1 >= coins);
         std::set<int> s;
@@ -119,7 +31,7 @@ namespace testGenerators {
         return {std::vector<int>(s.begin(),s.end()), randInt(minT, maxT)};
     }
 
-    std::pair<std::vector<int>,int> smallModulos(int n, int t, int modulo, int biggestRest=-1) {
+    std::pair<std::vector<int>,int> smallRestsModulo(int n, int t, int modulo, int biggestRest=-1) {
         if(biggestRest == -1)
             biggestRest = std::max(1,(int)sqrt(modulo));
         std::set<int> coins;
@@ -133,7 +45,7 @@ namespace testGenerators {
         return {std::vector<int>(coins.begin(),coins.end()),t};
     }
 
-    std::pair<std::vector<int>,int> hardModularRests(int m, int M, int n, int minT = 1e6) {        
+    std::pair<std::vector<int>,int> difficultRestsModulo(int m, int M, int n, int minT = 1e6) {        
         auto modularCoins = [&](std::vector<int> coins, int t) {
             const int n = coins.size();
 
@@ -184,5 +96,107 @@ namespace testGenerators {
         return {std::vector<int>(coins.begin(),coins.end()),t};
     }
 }
+
+
+
+namespace testStatisticsMeasurement {
+    template<class Num=int>
+    std::pair<std::vector<Num>, std::vector<Num> > calcDP(std::vector<Num> coins, Num t) {
+        const int n = coins.size();
+        std::vector<Num> dp(t+1,t+1);
+        std::vector<Num> comeFrom(t+1,t+1);
+        dp[0] = 0;
+        for(int i=0;i<=t;i++) {
+            if(dp[i] > t) {
+                dp[i] = -1;
+                continue;
+            }
+            for(int j=0; j<n && i + coins[j] <= t;j++)
+                if(dp[i+coins[j]] > dp[i]+1) {    
+                    dp[i+coins[j]] = std::min(dp[i+coins[j]],dp[i]+1);
+                    comeFrom[i+coins[j]] = i;
+                }
+        }
+        return {dp,comeFrom};
+    }
+
+    std::vector<int> getCoins(int x, const std::vector<int>& comeFrom) {
+        std::vector<int> used;
+        while(x > 0){
+            used.push_back(x - comeFrom[x]);
+            x = comeFrom[x];
+        }
+        return used;
+    }
+    std::vector<std::vector<int> > getAllPossibleCoinSetsForTarget(std::vector<int> coins, int t, int limit) {
+        auto dp = calcDP(coins,t).first;
+        if(dp[t] == -1)
+            return {};
+        std::queue<std::pair<std::pair<int,int>, std::vector<int> > > q; //{t,c},S:  rest t;don't use coins >= coins[c], coin set S
+        q.push({{t,coins.size()},{}});
+        std::vector<std::vector<int> > ans;
+        while(!q.empty()) {
+            int r = q.front().first.first, c = q.front().first.second;
+            std::vector<int> S = q.front().second;
+            q.pop();
+            if(r == 0) {
+                ans.push_back(S);
+                continue;
+            }
+            for(int i=c-1;i>=0;i--) {
+                int c = coins[i];
+                if(r-c >= 0 && dp[r-c]+1 == dp[r]) {
+                    S.push_back(c);
+                    if(q.size() + ans.size() <= limit)
+                        q.push({{r-c,i+1},S});
+                    S.pop_back();
+                }
+            }
+        }
+        return ans;
+    }
+
+
+    template<class Num=int>
+    std::vector<int> getResultsChangesAfterRemovingRandomCoins(std::vector<int> coins, int t, double fractionOfCoinsToRemove) { //doesn't remove biggest coin
+        auto dp1 = calcDP(coins,t).first;
+        std::vector<int> coinAfterRemoval(coins.begin(), coins.end()-1);
+
+        testGenerators::shuffle(coinAfterRemoval);
+        for(int i=0;i<(coins.size()-1)*fractionOfCoinsToRemove; i++)
+            coinAfterRemoval.pop_back();
+
+        coinAfterRemoval.push_back(coins.back());
+        std::sort(coinAfterRemoval.begin(), coinAfterRemoval.end());
+        auto dp2 = calcDP(coinAfterRemoval,t).first;
+
+        std::vector<int> res;
+        for(int i=0;i<=t;i++)
+            if(dp1[i] != dp2[i])
+                res.push_back(i);
+        return res;
+    } 
+
+    template<class Num=int>
+    std::vector<int> restsForWhichGreedyWorks(std::vector<Num> coins, Num t) {
+        auto dp = calcDP(coins,t).first;
+        std::vector<int> greedyRes(t+1);
+        std::vector<int> res;
+        for(int i=0;i<=t;i++) {
+            int t2 = i;
+            for(int j=coins.size()-1;j>=0;j--) {
+                while(t2 >= coins[j]) {
+                    t2 -= coins[j];
+                    greedyRes[i]++;
+                }
+            }
+            if(t2 != 0)
+                greedyRes[i] = -1;
+            if(greedyRes[i] == dp[i])
+                res.push_back(i);
+        }
+        return res;
+    }
+};
 
 #endif
