@@ -15,11 +15,12 @@
 #include "src/solution4.h"
 #include "src/solution_for_small_u.h"
 #include "src/solution_small_u_single_target.h"
-#include "test_generators.h"
+#include "src/test_generators.h"
 using namespace std;
 
 typedef function<int(vector<int>, int)>  coinFunc;
 typedef pair<vector<int>,int> Test;
+typedef function<Test(int,int,int)> TestGenFunction; //(n,t,u)
 
 
 double measure(coinFunc solution, Test test) {
@@ -87,7 +88,7 @@ pair<vector<vector<double> >, vector<vector<double> > > measureTimes(vector<pair
 }
 
 
-void tAndTime(const int runs, const string&  saveDirectory) {
+void tAndTime(const int runs, const string&  saveDirectory, TestGenFunction tf, int tgid) {
     cerr<<"preparing data for t, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -98,13 +99,13 @@ void tAndTime(const int runs, const string&  saveDirectory) {
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
     };
     const vector<int> ts = {50000, 100000, 200000, 500000, 1000000};
-    auto testGen = [&](int t) {return testGenerators::randomTest(4000,1,t/4,t,t);};
+    auto testGen = [&](int t) {return tf(4000,t,t-1);};
     auto avgTimeAndStddev = measureTimes(solutions, ts, testGen, runs);
 
-    save_to_csv("t_time",ts,"reszta do wydania",solutions, avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
+    save_to_csv("t_time"+to_string(tgid),ts,"reszta do wydania",solutions, avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void smallUvsClassic(const int runs, const string& saveDirectory) {
+void smallUvsClassic(const int runs, const string& saveDirectory, TestGenFunction tf, int tgid) {
     cerr<<"preparing data for classic vs all targets u graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -112,12 +113,13 @@ void smallUvsClassic(const int runs, const string& saveDirectory) {
     };
     const int n = 200, t = 4000000;
     const vector<int> us = {300,500,1000,2000,5000,10000, 15000, 18000, 20000, 25000, 30000, 40000, 50000, 100000};
-    auto testGen = [&](int u) {return testGenerators::randomTest(n,1,u,t,t);};
+    auto testGen = [&](int u) {return tf(n,t,u);};
     auto avgTimeAndStddev = measureTimes(solutions, us, testGen, runs);
-    save_to_csv("smallu_classic",us,"wielkość największej monety",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
+    save_to_csv("smallu_classic"+to_string(tgid),us,"wielkość największej monety",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void smallUSingleTargetVsSol(const int runs, const string& saveDirectory) {
+void smallUSingleTargetVsSol(const int runs, const string& saveDirectory, TestGenFunction tf, int tgid) {
+    cerr<<"printing statistics for small u, single target algorithms graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"small u single target", smallUSingleTarget::getMinimumCoinNumberFor},
         {"solution 2", solution2::getMinimumCoinNumberFor},
@@ -129,12 +131,12 @@ void smallUSingleTargetVsSol(const int runs, const string& saveDirectory) {
     vector<float> usFractions;
     for(auto u : us)
         usFractions.push_back(u/(float)t);
-    auto testGen = [&](int u) {return testGenerators::randomTest(n,1,u,t,t);};
+    auto testGen = [&](int u) {return tf(n,t,u);};
     auto avgTimeAndStddev = measureTimes(solutions, us, testGen, runs);
-    save_to_csv("smallusingletarget_sol",usFractions,"największa moneta $/$ reszta do wydania",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
+    save_to_csv("smallusingletarget_sol"+to_string(tgid),usFractions,"największa moneta $/$ reszta do wydania",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
-void nAndTime(const int runs, const string& saveDirectory) {
+void nAndTime(const int runs, const string& saveDirectory, TestGenFunction tf, int tgid) {
     cerr<<"preparing data for n, time graph"<<endl;
     const vector<pair<string,coinFunc> > solutions = {
         {"classic", classic::getMinimumCoinNumberFor},
@@ -146,9 +148,9 @@ void nAndTime(const int runs, const string& saveDirectory) {
     for(int i=1200;i<=4000; i += 400)
         ns.push_back(i);
 
-    auto testGen = [&](int n) {return testGenerators::randomTest(n,1,t,t,t);};
+    auto testGen = [&](int n) {return tf(n,t,t-1);};
     auto avgTimeAndStddev = measureTimes(solutions, ns, testGen, runs);
-    save_to_csv("n_time",ns,"liczba monet",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
+    save_to_csv("n_time"+to_string(tgid),ns,"liczba monet",solutions,avgTimeAndStddev.first, avgTimeAndStddev.second, saveDirectory);
 }
 
 void sol2Vs4OnBigAnswerTests(const int runs, const string& saveDirectory) {
@@ -205,15 +207,23 @@ void printStatsForTestGenerator(const string& name, ofstream& out, int runs, fun
     out<<endl;
 }
 
+
+vector<TestGenFunction> testgens = {
+    [](int n, int t, int u) {return testGenerators::randomTest(n,1,u,t,t);},
+    [](int n, int t, int u) {return testGenerators::randomTest(n,min(u-n,(int)sqrt(u)),u,t,t,-n/40+1);},
+    [](int n, int t, int u) {int M = sqrt(t+5); return testGenerators::smallRestsModulo(n,t,u,M,max(1,20*M/n));},
+    [](int n, int t, int u) {return testGenerators::difficultRestsModulo(10,min(t,4*u/n),n,t,u);}
+};
+
 void printStatsForGenerators(int runs, const string& saveDirectory) {
     cerr<<"printing statistics for test generators"<<endl;
     const int t = 1e6-1;
     ofstream out;
     out.open(saveDirectory+"stats_test_generators.txt");
-    printStatsForTestGenerator("Fully random test", out, runs, [&](){return testGenerators::randomTest(2000,1,t-1,t,t);} );
-    printStatsForTestGenerator("Random test with smaller coins", out, runs, [&](){return testGenerators::randomTest(2000,4000,t,t,t,-49);} );
-    printStatsForTestGenerator("Small rests modulo", out, runs, [&](){return testGenerators::smallRestsModulo(2000,t,200,8);} );
-    printStatsForTestGenerator("Difficult rests modulo", out, runs, [&](){return testGenerators::difficultRestsModulo(10,2000,2000,t);} );
+    printStatsForTestGenerator("Fully random test", out, runs, [&](){return testgens[0](2000,t,t-1);});
+    printStatsForTestGenerator("Random test with smaller coins", out, runs, [&](){return testgens[1](2000,t,t-1);});
+    printStatsForTestGenerator("Small rests modulo", out, runs, [&](){return testgens[2](2000,t,t-1);});
+    printStatsForTestGenerator("Difficult rests modulo", out, runs, [&](){return testgens[3](2000,t,t-1);});
 }
 
 int main(int argc, char** argv) {
@@ -223,11 +233,12 @@ int main(int argc, char** argv) {
     string saveDirectory = "data/";
     if(argc >= 3)
         saveDirectory = string(argv[2]);
-
     printStatsForGenerators(runs, saveDirectory);
-    tAndTime(runs,saveDirectory);
+    for(int i=3;i<4;i++) {
+        tAndTime(runs,saveDirectory, testgens[i],i+1);
+        nAndTime(runs,saveDirectory,testgens[i],i+1);
+        smallUvsClassic(runs,saveDirectory,testgens[i],i+1);
+        smallUSingleTargetVsSol(runs,saveDirectory,testgens[i],i+1);
+    }
     sol2Vs4OnBigAnswerTests(runs, saveDirectory);
-    nAndTime(runs,saveDirectory);
-    smallUSingleTargetVsSol(runs,saveDirectory);
-    smallUvsClassic(runs,saveDirectory);
 }

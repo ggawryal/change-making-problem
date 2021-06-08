@@ -1,8 +1,16 @@
 import subprocess
 import os
+import sys
 
 directory = os.path.dirname(os.path.realpath(__file__))
-
+number_of_runs_on_same_testgenerator = 1
+for arg in sys.argv[1:]:
+    if arg.startswith("--runs="):
+        try:
+            number_of_runs_on_same_testgenerator = int(arg[7:])
+        except:
+            print("wrong format of 'runs' argument, it should be for example --runs=10")
+            exit(4)
 
 
 def printAndRunCommand(command):
@@ -64,7 +72,7 @@ exit_code = printAndRunCommand(os.path.join(directory,'test_correctness') )
 if exit_code != 0:
     print("some testcases failed!")
     exit(0)
-printAndRunCommand(os.path.join(directory,'benchmark')+ ' 10 '+ os.path.join(directory,'data',''))
+printAndRunCommand(os.path.join(directory,'benchmark')+ ' '+str(number_of_runs_on_same_testgenerator)+' '+ os.path.join(directory,'data',''))
 
 
 import pandas as pd
@@ -110,8 +118,10 @@ def plotFromFile(name, log_scale = False):
     plt.savefig(os.path.join(directory,'data','plot_'+str(name)+'.pdf'))
     plt.clf()
 
-plotFromFile('t_time')
+for i in (1,2,3,4):
+    plotFromFile('t_time'+str(i))
+    plotFromFile('n_time'+str(i))
+    plotFromFile('smallusingletarget_sol'+str(i))
+    plotFromFile('smallu_classic'+str(i))
+
 plotFromFile('sol2_vs_4_big_answer',log_scale=True)
-plotFromFile('n_time')
-plotFromFile('smallusingletarget_sol')
-plotFromFile('smallu_classic')

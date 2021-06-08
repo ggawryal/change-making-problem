@@ -13,7 +13,7 @@
 #include "src/solution4.h"
 #include "src/solution_for_small_u.h"
 #include "src/solution_small_u_single_target.h"
-#include "test_generators.h"
+#include "src/test_generators.h"
 
 using namespace std;
 
@@ -63,18 +63,18 @@ int main(int argc, char** argv) {
                 testcase = testGenerators::randomTest(n, 1, t-1, t, t);
                 break;
             case 1:
-                t = testGenerators::randInt(4*n+30,4000); 
-                testcase = testGenerators::randomTest(n, testGenerators::randInt(1,20), t/4, t, t,-2);
+                t = testGenerators::randInt(4*(n+1)+30,4000); 
+                testcase = testGenerators::randomTest(n, testGenerators::randInt(1,20), t, t, t, -2);
                 break; 
             case 2:
                 t = testGenerators::randInt(n*n,800); 
-                testcase = testGenerators::smallRestsModulo(n,t, sqrt(t), testGenerators::randInt(1,3,-1));
+                testcase = testGenerators::smallRestsModulo(n,t,t-1, sqrt(t), testGenerators::randInt(1,3,-1));
                 break;
             default:
                 int restsNumber = testGenerators::randInt(1,3);
                 int mod = testGenerators::randInt(16,30);
                 t = testGenerators::randInt((n+1)*(mod+1),4*(n+1)*(mod+1)); 
-                testcase = testGenerators::difficultRestsModulo(restsNumber,mod,n,t);
+                testcase = testGenerators::difficultRestsModulo(restsNumber,mod,n,t,t-1);
                 break;
         }       
         int x0 = classic::getMinimumCoinNumberFor(testcase.first, testcase.second);

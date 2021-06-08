@@ -31,24 +31,29 @@ namespace testGenerators {
         return {std::vector<int>(s.begin(),s.end()), randInt(minT, maxT)};
     }
 
-    std::pair<std::vector<int>,int> smallRestsModulo(int n, int t, int modulo, int biggestRest=-1) {
+    std::pair<std::vector<int>,int> smallRestsModulo(int n, int t, int u, int modulo, int biggestRest = -1) {
         if(biggestRest == -1)
             biggestRest = std::max(1,(int)sqrt(modulo));
-        std::set<int> coins;
-        while(coins.size() < n) {
-            int r = randInt(0,biggestRest,0);
-            int k = randInt(0,t/(std::max(1,r/10)*modulo)-1,0);
-            int coin = k*modulo+r;
-            if(coin != 0 && coin < t)
-                coins.insert(coin);
+        std::vector<int> availableCoins;
+        for(int r=0;r<modulo;r++) {
+            for(int i=0;i<=u;i+=modulo)
+                availableCoins.push_back(i+r);
+            if(r >= biggestRest && availableCoins.size() >= n)
+                break;
         }
-        return {std::vector<int>(coins.begin(),coins.end()),t};
+        availableCoins.erase(availableCoins.begin()); // remove coin 0
+        assert(availableCoins.size() >= n);
+        shuffle(availableCoins);
+        availableCoins.resize(n);
+        std::sort(availableCoins.begin(),availableCoins.end());
+        return {availableCoins,t};
     }
 
-    std::pair<std::vector<int>,int> difficultRestsModulo(int m, int M, int n, int minT = 1e6) {        
+    std::pair<std::vector<int>,int> difficultRestsModulo(int m, int M, int n, int minT, int u) {    
+        assert(M > 1);
+        m = std::min(m,M-1);  
         auto modularCoins = [&](std::vector<int> coins, int t) {
             const int n = coins.size();
-
             std::vector<int> dp(t,t+1);
             dp[0] = 0;
             for(int j=0; j<n;j++) {
@@ -83,17 +88,22 @@ namespace testGenerators {
             i++;
         }
 
-        int t = minT - minT%M + hardRest.second;
-        std::set<int> coins;
-        while(coins.size() < n) {
-            int r = randInt(0,m-1,-2);
-            int k = randInt(0,t/M,0);
-
-            int coin = k*M+rests[r];
-            if(coin < t && coin > 0)
-                coins.insert(coin);
+        int t = minT + (M-minT%M) + hardRest.second;
+        std::vector<int> availableCoins;
+        for(int i=0;i<=u;i+=M)
+            for(auto j : rests)
+                if(i+j <= u)
+                    availableCoins.push_back(i+j);
+        if(std::find(availableCoins.begin(),availableCoins.end(),0) != availableCoins.end())
+            availableCoins.erase(std::find(availableCoins.begin(),availableCoins.end(),0));
+        if(availableCoins.size() < n) {
+            assert(m < M);
+            return difficultRestsModulo(std::min(M,2*m),M,n,minT,u);
         }
-        return {std::vector<int>(coins.begin(),coins.end()),t};
+        shuffle(availableCoins);
+        availableCoins.resize(n);
+        std::sort(availableCoins.begin(),availableCoins.end());
+        return {availableCoins,t};
     }
 }
 
@@ -132,7 +142,7 @@ namespace testStatisticsMeasurement {
         auto dp = calcDP(coins,t).first;
         if(dp[t] == -1)
             return {};
-        std::queue<std::pair<std::pair<int,int>, std::vector<int> > > q; //{t,c},S:  rest t;don't use coins >= coins[c], coin set S
+        std::queue<std::pair<std::pair<int,int>, std::vector<int> > > q; //{t,c},S:  rest t; don't use coins >= coins[c], coin set S
         q.push({{t,coins.size()},{}});
         std::vector<std::vector<int> > ans;
         while(!q.empty()) {
@@ -185,9 +195,9 @@ namespace testStatisticsMeasurement {
         for(int i=0;i<=t;i++) {
             int t2 = i;
             for(int j=coins.size()-1;j>=0;j--) {
-                while(t2 >= coins[j]) {
-                    t2 -= coins[j];
-                    greedyRes[i]++;
+                if(coins[j] <= t2) {
+                    greedyRes[i] += t2 / coins[j];
+                    t2 %= coins[j];
                 }
             }
             if(t2 != 0)

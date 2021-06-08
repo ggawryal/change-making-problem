@@ -5,20 +5,20 @@ Average percentage of targets for which greedy works = 1.38782%
 Average percentage of targets for which result changes after removing 10% of coins = 42.23397%
 
 Random test with smaller coins:
-Average result = 8.30000
-Average number of different coins used = 3.00000
-Average percentage of targets for which greedy works = 3.25743%
-Average percentage of targets for which result changes after removing 10% of coins = 19.95013%
+Average result = 8.00000
+Average number of different coins used = 3.20000
+Average percentage of targets for which greedy works = 4.05800%
+Average percentage of targets for which result changes after removing 10% of coins = 18.20171%
 
 Small rests modulo:
-Average result = 25.00000
-Average number of different coins used = 2.90000
-Average percentage of targets for which greedy works = 1.67162%
-Average percentage of targets for which result changes after removing 10% of coins = 16.32216%
+Average result = 101.30000
+Average number of different coins used = 2.50000
+Average percentage of targets for which greedy works = 6.93973%
+Average percentage of targets for which result changes after removing 10% of coins = 40.74591%
 
 Difficult rests modulo:
-Average result = 8.30000
-Average number of different coins used = 3.50000
-Average percentage of targets for which greedy works = 1.67934%
-Average percentage of targets for which result changes after removing 10% of coins = 15.28307%
+Average result = 8.10000
+Average number of different coins used = 3.40000
+Average percentage of targets for which greedy works = 1.47251%
+Average percentage of targets for which result changes after removing 10% of coins = 3.31151%
 
