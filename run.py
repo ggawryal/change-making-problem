@@ -15,7 +15,7 @@ for arg in sys.argv[1:]:
 
 def printAndRunCommand(command):
     print(command)
-    r = subprocess.call(command.split(),shell=True)
+    r = subprocess.call(command.split(),shell=(True if os.name == 'nt' else False)) #shell=True on Windows, False on *nix
     return r
 
 def try_install_fftw():

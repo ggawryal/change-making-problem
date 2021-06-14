@@ -41,7 +41,7 @@ void iterativeFFT(std::vector<std::complex<float> >&A, int t=1) {
 
 static int use_fftw = true;
 //select fft version
-#ifndef DONT_USE_FFTW
+#ifndef DONT_USE_FFTW_LIB
 #include <fftw3.h>
 void FFTW(std::vector<std::complex<float> >&A, int t=1) {
     const int n = A.size();
